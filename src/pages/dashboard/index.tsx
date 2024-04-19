@@ -1,4 +1,5 @@
 import { GetServerSideProps } from "next";
+import { ChangeEvent, FormEvent, useState } from "react";
 import styles from "./styles.module.css";
 import Head from "next/head";
 
@@ -7,7 +8,46 @@ import { Textarea } from "../../components/textarea";
 import { FiShare2 } from "react-icons/fi";
 import { FaTrash } from "react-icons/fa";
 
-export default function Dashboard() {
+import { db } from "../../services/firebaseConnection";
+import { addDoc, collection } from "firebase/firestore";
+
+interface HomeProps {
+  user: {
+    email: string;
+  };
+}
+
+export default function Dashboard({ user }: HomeProps) {
+  const [input, setInput] = useState("");
+  const [publicTask, setPublicTask] = useState(false);
+
+  function handleChangePublic(event: ChangeEvent<HTMLInputElement>) {
+    setPublicTask(event.target.checked);
+  }
+
+  async function handleRegisterTask(event: FormEvent) {
+    event.preventDefault();
+
+    if (input === "") {
+      alert("Digite alguma tarefa");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "tarefas"), {
+        tarefa: input,
+        created: new Date(),
+        user: user?.email,
+        public: publicTask,
+      });
+
+      setInput("");
+      setPublicTask(false);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -18,10 +58,21 @@ export default function Dashboard() {
         <section className={styles.content}>
           <div className={styles.contentForm}>
             <h1 className={styles.title}>Qual a sua tarefa?</h1>
-            <form>
-              <Textarea placeholder="Digite qual a sua tarefa" />
+            <form onSubmit={handleRegisterTask}>
+              <Textarea
+                placeholder="Digite qual a sua tarefa"
+                value={input}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  setInput(e.target.value)
+                }
+              />
               <div className={styles.checkboxArea}>
-                <input type="checkbox" className={styles.checkbox} />
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={publicTask}
+                  onChange={handleChangePublic}
+                />
                 <label>Deixar tarefa publica?</label>
               </div>
               <button className={styles.button} type="submit">
@@ -42,7 +93,10 @@ export default function Dashboard() {
               </button>
             </div>
             <div className={styles.taskContent}>
-              <p>Minha primeira tarefa de exemplo show demais</p>
+              <p>
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                Dolorem numquam itaque tenetur soluta, quasi quis.
+              </p>
               <button className={styles.trashButton}>
                 <FaTrash size={24} color="#ea3140" />
               </button>
@@ -70,6 +124,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   }
 
   return {
-    props: {},
+    props: {
+      user: {
+        email: session?.user?.email,
+      },
+    },
   };
 };

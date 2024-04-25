@@ -35,6 +35,10 @@ interface TaskProps {
   user: string;
 }
 
+interface HandleSearch {
+  id?: string;
+}
+
 export default function Dashboard({ user }: HomeProps) {
   const [input, setInput] = useState("");
   const [publicTask, setPublicTask] = useState(false);
@@ -94,7 +98,7 @@ export default function Dashboard({ user }: HomeProps) {
     }
   }
 
-  async function handleShare(id: string) {
+  async function handleShare({ id }: HandleSearch) {
     await navigator.clipboard.writeText(
       `${process.env.NEXT_PUBLIC_URL}/task/${id}`
     );
@@ -151,7 +155,11 @@ export default function Dashboard({ user }: HomeProps) {
                   <label className={styles.tag}>PUBLICA</label>
                   <button
                     className={styles.shareButton}
-                    onClick={() => handleShare(item.id)}
+                    onClick={() =>
+                      handleShare({
+                        id: item.id,
+                      })
+                    }
                   >
                     <FiShare2 size={22} color="#3183ff" />
                   </button>
